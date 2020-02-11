@@ -1,0 +1,29 @@
+RefactoringType,Test,Prod,Both
+Extract Method,4790,35544,7143
+Pull Up Attribute,1230,9110,2650
+Pull Up Method,2417,17794,4966
+Rename Variable,11112,57094,15804
+Extract Superclass,558,3578,1153
+Inline Variable,258,3277,633
+Move Attribute,1303,35494,6030
+Rename Class,3620,13527,7260
+Rename Method,11257,50818,20131
+Extract Subclass,31,747,237
+Inline Method,532,5586,1337
+Push Down Attribute,152,3198,878
+Push Down Method,194,7468,2301
+Rename Attribute,29288,97814,10740
+Rename Parameter,1065,30963,12343
+Extract And Move Method,1155,9497,3038
+Move Class,6143,29477,40645
+Extract Variable,1544,16314,2542
+Extract Class,587,4546,1855
+Move Method,3865,24303,8649
+Move And Rename Class,807,4035,2819
+Move Source Folder,387,2943,1210
+Extract Interface,77,1408,257
+Replace Variable With Attribute,529,2223,704
+Change Package,156,1421,803
+Parameterize Variable,370,2743,570
+Move And Rename Attribute,30,177,20
+Replace Attribute,16,88,117
