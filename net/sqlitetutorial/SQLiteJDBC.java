@@ -17,12 +17,18 @@ public class SQLiteJDBC {
 		 ArrayList<String> commitstemp = new ArrayList();
 		 Set<String> commits;
 		 ArrayList<Refactoring> refactorings = new ArrayList();
+		 
 		 ArrayList<String> refactoringTypes = new ArrayList();
-		 refactoringTypes.add("renam");
-		 refactoringTypes.add("extract");
-		 refactoringTypes.add("mov");
-		 refactoringTypes.add("pull");
-		 refactoringTypes.add("push");
+		 ArrayList<Integer> refactoringTypeOccinTest = new ArrayList();
+		 ArrayList<Integer> refactoringTypeOccinProd = new ArrayList();
+		 ArrayList<Integer> refactoringTypeOccinBoth = new ArrayList();
+		 
+		 
+		 ArrayList<String> commitTypes = new ArrayList();
+		 ArrayList<Integer> commitTypeslabeled = new ArrayList();
+		 
+		 
+		 
 		 
 		 
 		 Connection c = null;
@@ -30,7 +36,7 @@ public class SQLiteJDBC {
 		   try {
 			   
 		      Class.forName("org.sqlite.JDBC");
-		      c = DriverManager.getConnection("jdbc:sqlite:C:/refdb/TOSEM.db");
+		      c = DriverManager.getConnection("jdbc:sqlite:E:/Data/eclipse-workspace/AnalysisRefDB/db/TOSEM.db");
 		      c.setAutoCommit(false);
 		      System.out.println("Opened database successfully");
 
@@ -52,6 +58,27 @@ public class SQLiteJDBC {
 		         
 		         refactorings.add(r);
 		      }
+		      
+		      rs = stmt.executeQuery( "SELECT * FROM commit_type;" );
+		      
+		      while ( rs.next() ) {
+			    	 
+		    	 commitTypes.add(rs.getString("CommitId"));
+		 		 commitTypeslabeled.add(rs.getInt("RefType"));
+		      }
+		      
+		      rs = stmt.executeQuery( "select distinct RefactoringType from miner_refactoring;" );
+		      
+		      while ( rs.next() ) {
+			    	 
+		    	  refactoringTypes.add(rs.getString("RefactoringType"));
+		    	  refactoringTypeOccinTest.add(0);
+		    	  refactoringTypeOccinProd.add(0);
+		    	  refactoringTypeOccinBoth.add(0);
+		    	  
+		    	  
+		      }
+		      
 		      
 		      rs.close();
 		      stmt.close();
@@ -130,88 +157,141 @@ public class SQLiteJDBC {
 		      System.out.println("The number of prod booleans: "+refactorProdFiles.size());
 		      System.out.println("The number of refactorings: "+refactorings.size());
 		      
-		        // detection of test vs. production commits
-		        System.out.print("Detecting testing only commits... "); 
-		        for (int counter = 0; counter < commitIds.size(); counter++) {
-		            
-		        	// testing with only 1000 instances
-		        	//for (int counter2 = 0; counter2 < refactorings.size(); counter2++) {
-		        	for (int counter2 = 0; counter2 < 1000; counter2++) {
-		        		
-				    	  if(commitIds.get(counter).equals(refactorings.get(counter2).CommitId)) {
-				    		  
-				    		  if(refactorings.get(counter2).FilePath.contains("test") || refactorings.get(counter2).FilePath.contains("Test")
-				    		     || refactorings.get(counter2).Class.contains("test") || refactorings.get(counter2).Class.contains("Test")	  
-				    				  ) {
-				    		  
-				    			  refactorTestFiles.set(counter, true);
-				    		  }
-				    		  else {
-				    			  refactorProdFiles.set(counter, true);
-				    		  }
-				    	  }
-				    	  
-				      }
-		        	
-		        } 
-		        System.out.println("Done");
+//		        // detection of test vs. production commits
+//		        System.out.print("Detecting testing only commits... "); 
+//		        for (int counter = 0; counter < commitIds.size(); counter++) {
+//		            
+//		        	// testing with only 1000 instances
+//		        	//for (int counter2 = 0; counter2 < refactorings.size(); counter2++) {
+//		        	for (int counter2 = 0; counter2 < refactorings.size(); counter2++) {
+//		        		
+//				    	  if(commitIds.get(counter).equals(refactorings.get(counter2).CommitId)) {
+//				    		  
+//				    		  if(refactorings.get(counter2).FilePath.contains("test") || refactorings.get(counter2).FilePath.contains("Test")
+//				    		     || refactorings.get(counter2).Class.contains("test") || refactorings.get(counter2).Class.contains("Test")	  
+//				    				  ) {
+//				    		  
+//				    			  refactorTestFiles.set(counter, true);
+//				    		  }
+//				    		  else {
+//				    			  refactorProdFiles.set(counter, true);
+//				    		  }
+//				    	  }
+//				    	  
+//				      }
+//		        	
+//		        } 
+//		        System.out.println("Done");
+//		      
+//		        int testOnly = 0;
+//		        int prodOnly = 0;
+//		        int both = 0;
+//		        
+//		        DateTimeFormatter timeStampPattern = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+//		        //System.out.println(timeStampPattern.format(java.time.LocalDateTime.now()));
+//		        
+//		        System.out.print("Creating output files... ");
+//		        FileWriter csvWriterTest = new FileWriter("output/testCommits"+timeStampPattern.format(java.time.LocalDateTime.now())+".csv");
+//		        FileWriter csvWriterProd = new FileWriter("output/prodCommits"+timeStampPattern.format(java.time.LocalDateTime.now())+".csv");
+//		        FileWriter csvWriterBoth = new FileWriter("output/bothCommits"+timeStampPattern.format(java.time.LocalDateTime.now())+".csv");
+//
+//		        
+//		        for (int counter = 0; counter < commitIds.size(); counter++) 
+//		        {
+//		        	
+//		        	if(refactorTestFiles.get(counter).equals(true))
+//		        	{
+//		        		if(refactorProdFiles.get(counter).equals(false)) 
+//		        		{
+//		        			testOnly++;
+//		        			csvWriterTest.append(commitIds.get(counter));
+//		        			csvWriterTest.append("\n");
+//		        		}
+//		        		else
+//		        		{
+//		        			both++;
+//		        			csvWriterBoth.append(commitIds.get(counter));
+//		        			csvWriterBoth.append("\n");
+//		        		}
+//		        	}
+//		        	else 
+//		        	{
+//		        		if(refactorProdFiles.get(counter).equals(true)) 
+//		        		{
+//		        			prodOnly++;
+//		        			csvWriterProd.append(commitIds.get(counter));
+//		        			csvWriterProd.append("\n");
+//		        		}
+//		        	}
+//		        }
+//		        
+//		        System.out.println("*** Some more statistics ***");
+//			    System.out.println("The number of commits refactoring tests: "+testOnly);
+//			    System.out.println("The number of commits refactoring prods: "+prodOnly);
+//			    System.out.println("The number of commits refactoring both: "+both);
+//		        
+//		        csvWriterTest.flush();
+//		        csvWriterTest.close();
+//		        csvWriterProd.flush();
+//		        csvWriterProd.close();
+//		        csvWriterBoth.flush();
+//		        csvWriterBoth.close();
+//		        System.out.println("Done");
 		      
-		        int testOnly = 0;
-		        int prodOnly = 0;
-		        int both = 0;
-		        
-		        DateTimeFormatter timeStampPattern = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
-		        //System.out.println(timeStampPattern.format(java.time.LocalDateTime.now()));
-		        
-		        System.out.print("Creating output files... ");
-		        FileWriter csvWriterTest = new FileWriter("output/testCommits"+timeStampPattern.format(java.time.LocalDateTime.now())+".csv");
-		        FileWriter csvWriterProd = new FileWriter("output/prodCommits"+timeStampPattern.format(java.time.LocalDateTime.now())+".csv");
-		        FileWriter csvWriterBoth = new FileWriter("output/bothCommits"+timeStampPattern.format(java.time.LocalDateTime.now())+".csv");
-
-		        
-		        for (int counter = 0; counter < commitIds.size(); counter++) 
-		        {
-		        	
-		        	if(refactorTestFiles.get(counter).equals(true))
-		        	{
-		        		if(refactorProdFiles.get(counter).equals(false)) 
-		        		{
-		        			testOnly++;
-		        			csvWriterTest.append(commitIds.get(counter));
-		        			csvWriterTest.append("\n");
-		        		}
-		        		else
-		        		{
-		        			both++;
-		        			csvWriterBoth.append(commitIds.get(counter));
-		        			csvWriterBoth.append("\n");
-		        		}
-		        	}
-		        	else 
-		        	{
-		        		if(refactorProdFiles.get(counter).equals(true)) 
-		        		{
-		        			prodOnly++;
-		        			csvWriterProd.append(commitIds.get(counter));
-		        			csvWriterProd.append("\n");
-		        		}
-		        	}
-		        }
-		        
-		        System.out.println("*** Some more statistics ***");
-			    System.out.println("The number of commits refactoring tests: "+testOnly);
-			    System.out.println("The number of commits refactoring prods: "+prodOnly);
-			    System.out.println("The number of commits refactoring both: "+both);
-		        
-		        csvWriterTest.flush();
-		        csvWriterTest.close();
-		        csvWriterProd.flush();
-		        csvWriterProd.close();
-		        csvWriterBoth.flush();
-		        csvWriterBoth.close();
-		        System.out.println("Done");
-			    
-		        
+			  System.out.print("Calculating instances per type... ");  
+		      for (int counter = 0; counter < refactorings.size(); counter++) {
+	  
+		    	int index = commitTypes.indexOf(refactorings.get(counter).CommitId);
+		    	
+		    	if (commitTypeslabeled.get(index)==0) {
+		    			  
+		    		int index2 = refactoringTypes.indexOf(refactorings.get(counter).RefactoringType);
+			    	  refactoringTypeOccinTest.set(index2, refactoringTypeOccinTest.get(index2)+1);
+		    	  }
+		    	else if (commitTypeslabeled.get(index)==1) {
+		    			  
+			    		int index2 = refactoringTypes.indexOf(refactorings.get(counter).RefactoringType);
+				    	  refactoringTypeOccinProd.set(index2, refactoringTypeOccinProd.get(index2)+1);
+			    	  }
+		    	else if (commitTypeslabeled.get(index)==2) {
+	    			  
+		    		int index2 = refactoringTypes.indexOf(refactorings.get(counter).RefactoringType);
+			    	  refactoringTypeOccinBoth.set(index2, refactoringTypeOccinBoth.get(index2)+1);
+		    	  }
+	    		 	  
+		    	  
+		      }
+		      System.out.println("Done");
+		      
+		      DateTimeFormatter timeStampPattern = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+              System.out.print("Creating output files... ");
+              FileWriter csvWriter = new FileWriter("output/refactoringTypes"+timeStampPattern.format(java.time.LocalDateTime.now())+".csv");
+		      csvWriter.append("RefactoringType");
+              csvWriter.append(",");
+              csvWriter.append("Test");
+              csvWriter.append(",");
+              csvWriter.append("Prod");
+              csvWriter.append(",");
+              csvWriter.append("Both");
+              csvWriter.append("\n");  
+		      
+		      for (int counter = 0; counter < refactoringTypes.size(); counter++) 
+			  {
+		    	  csvWriter.append(refactoringTypes.get(counter));
+		    	  csvWriter.append(",");
+	              csvWriter.append(refactoringTypeOccinTest.get(counter).toString());
+	              csvWriter.append(",");
+	              csvWriter.append(refactoringTypeOccinProd.get(counter).toString());
+	              csvWriter.append(",");
+	              csvWriter.append(refactoringTypeOccinBoth.get(counter).toString());
+	              csvWriter.append("\n");
+		    	  System.out.println(refactoringTypes.get(counter));
+		    	  System.out.println(refactoringTypeOccinTest.get(counter)+ " "+refactoringTypeOccinProd.get(counter)+" "+ refactoringTypeOccinBoth.get(counter));
+			  }
+		      csvWriter.flush();
+		      csvWriter.close();	  
+		      
+		      
 		   } catch ( Exception e ) 
 		    {
 		      System.err.println( e.getClass().getName() + ": " + e.getMessage() );
