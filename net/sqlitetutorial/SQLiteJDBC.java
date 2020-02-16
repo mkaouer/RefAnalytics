@@ -141,7 +141,7 @@ public class SQLiteJDBC {
 		    		  }
 		    	  }
 		    	  
-		    	  patterns.get(counter).occurrenceInProjects = new ArrayList(patternOccurrence);
+		    	  patterns.get(counter).occurrenceInRefProjects = new ArrayList(patternOccurrence);
 		      }
 		      
 		      // Test
@@ -328,9 +328,9 @@ public class SQLiteJDBC {
 			  csvWriter.append(patterns.get(counter0).pattern);
 			  csvWriter.append("\n");
 
-			  for (int counter = 0; counter < patterns.get(counter0).occurrenceInProjects.size(); counter++) 
+			  for (int counter = 0; counter < patterns.get(counter0).occurrenceInRefProjects.size(); counter++) 
 			  {
-				  csvWriter.append(patterns.get(counter0).occurrenceInProjects.get(counter).toString());
+				  csvWriter.append(patterns.get(counter0).occurrenceInRefProjects.get(counter).toString());
 				  csvWriter.append("\n");
 			  }
 			  csvWriter.flush();
