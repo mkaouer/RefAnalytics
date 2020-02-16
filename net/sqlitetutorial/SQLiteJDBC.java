@@ -1,6 +1,7 @@
 package net.sqlitetutorial;
 import java.util.*;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.sql.*;
 import java.text.Format;
 import java.time.format.DateTimeFormatter;
@@ -36,7 +37,7 @@ public class SQLiteJDBC {
 		   try {
 			   
 		      Class.forName("org.sqlite.JDBC");
-		      c = DriverManager.getConnection("jdbc:sqlite:E:/Data/eclipse-workspace/AnalysisRefDB/db/TOSEM.db");
+		      c = DriverManager.getConnection("jdbc:sqlite:C:/refdb/TOSEM.db");
 		      c.setAutoCommit(false);
 		      System.out.println("Opened database successfully");
 
@@ -238,58 +239,11 @@ public class SQLiteJDBC {
 //		        csvWriterBoth.close();
 //		        System.out.println("Done");
 		      
-			  System.out.print("Calculating instances per type... ");  
-		      for (int counter = 0; counter < refactorings.size(); counter++) {
-	  
-		    	int index = commitTypes.indexOf(refactorings.get(counter).CommitId);
-		    	
-		    	if (commitTypeslabeled.get(index)==0) {
-		    			  
-		    		int index2 = refactoringTypes.indexOf(refactorings.get(counter).RefactoringType);
-			    	  refactoringTypeOccinTest.set(index2, refactoringTypeOccinTest.get(index2)+1);
-		    	  }
-		    	else if (commitTypeslabeled.get(index)==1) {
-		    			  
-			    		int index2 = refactoringTypes.indexOf(refactorings.get(counter).RefactoringType);
-				    	  refactoringTypeOccinProd.set(index2, refactoringTypeOccinProd.get(index2)+1);
-			    	  }
-		    	else if (commitTypeslabeled.get(index)==2) {
-	    			  
-		    		int index2 = refactoringTypes.indexOf(refactorings.get(counter).RefactoringType);
-			    	  refactoringTypeOccinBoth.set(index2, refactoringTypeOccinBoth.get(index2)+1);
-		    	  }
-	    		 	  
-		    	  
-		      }
-		      System.out.println("Done");
+			  celculateInstancesPerType(refactorings, refactoringTypes, refactoringTypeOccinTest,
+					refactoringTypeOccinProd, refactoringTypeOccinBoth, commitTypes, commitTypeslabeled);
 		      
-		      DateTimeFormatter timeStampPattern = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
-              System.out.print("Creating output files... ");
-              FileWriter csvWriter = new FileWriter("output/refactoringTypes"+timeStampPattern.format(java.time.LocalDateTime.now())+".csv");
-		      csvWriter.append("RefactoringType");
-              csvWriter.append(",");
-              csvWriter.append("Test");
-              csvWriter.append(",");
-              csvWriter.append("Prod");
-              csvWriter.append(",");
-              csvWriter.append("Both");
-              csvWriter.append("\n");  
-		      
-		      for (int counter = 0; counter < refactoringTypes.size(); counter++) 
-			  {
-		    	  csvWriter.append(refactoringTypes.get(counter));
-		    	  csvWriter.append(",");
-	              csvWriter.append(refactoringTypeOccinTest.get(counter).toString());
-	              csvWriter.append(",");
-	              csvWriter.append(refactoringTypeOccinProd.get(counter).toString());
-	              csvWriter.append(",");
-	              csvWriter.append(refactoringTypeOccinBoth.get(counter).toString());
-	              csvWriter.append("\n");
-		    	  System.out.println(refactoringTypes.get(counter));
-		    	  System.out.println(refactoringTypeOccinTest.get(counter)+ " "+refactoringTypeOccinProd.get(counter)+" "+ refactoringTypeOccinBoth.get(counter));
-			  }
-		      csvWriter.flush();
-		      csvWriter.close();	  
+		      printInstancesPerType(refactoringTypes, refactoringTypeOccinTest, refactoringTypeOccinProd,
+					refactoringTypeOccinBoth);	  
 		      
 		      
 		   } catch ( Exception e ) 
@@ -299,4 +253,66 @@ public class SQLiteJDBC {
 		   }
 		   System.out.println("Operation done successfully");
 		  }
+
+	private static void printInstancesPerType(ArrayList<String> refactoringTypes,
+			ArrayList<Integer> refactoringTypeOccinTest, ArrayList<Integer> refactoringTypeOccinProd,
+			ArrayList<Integer> refactoringTypeOccinBoth) throws IOException {
+		DateTimeFormatter timeStampPattern = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+		  System.out.print("Creating output files... ");
+		  FileWriter csvWriter = new FileWriter("output/refactoringTypes"+timeStampPattern.format(java.time.LocalDateTime.now())+".csv");
+		  csvWriter.append("RefactoringType");
+		  csvWriter.append(",");
+		  csvWriter.append("Test");
+		  csvWriter.append(",");
+		  csvWriter.append("Prod");
+		  csvWriter.append(",");
+		  csvWriter.append("Both");
+		  csvWriter.append("\n");  
+		  
+		  for (int counter = 0; counter < refactoringTypes.size(); counter++) 
+		  {
+			  csvWriter.append(refactoringTypes.get(counter));
+			  csvWriter.append(",");
+		      csvWriter.append(refactoringTypeOccinTest.get(counter).toString());
+		      csvWriter.append(",");
+		      csvWriter.append(refactoringTypeOccinProd.get(counter).toString());
+		      csvWriter.append(",");
+		      csvWriter.append(refactoringTypeOccinBoth.get(counter).toString());
+		      csvWriter.append("\n");
+			  System.out.println(refactoringTypes.get(counter));
+			  System.out.println(refactoringTypeOccinTest.get(counter)+ " "+refactoringTypeOccinProd.get(counter)+" "+ refactoringTypeOccinBoth.get(counter));
+		  }
+		  csvWriter.flush();
+		  csvWriter.close();
+	}
+
+	private static void celculateInstancesPerType(ArrayList<Refactoring> refactorings,
+			ArrayList<String> refactoringTypes, ArrayList<Integer> refactoringTypeOccinTest,
+			ArrayList<Integer> refactoringTypeOccinProd, ArrayList<Integer> refactoringTypeOccinBoth,
+			ArrayList<String> commitTypes, ArrayList<Integer> commitTypeslabeled) {
+		System.out.print("Calculating instances per type... ");  
+		  for (int counter = 0; counter < refactorings.size(); counter++) {
+  
+			int index = commitTypes.indexOf(refactorings.get(counter).CommitId);
+			
+			if (commitTypeslabeled.get(index)==0) {
+					  
+				int index2 = refactoringTypes.indexOf(refactorings.get(counter).RefactoringType);
+		    	  refactoringTypeOccinTest.set(index2, refactoringTypeOccinTest.get(index2)+1);
+			  }
+			else if (commitTypeslabeled.get(index)==1) {
+					  
+		    		int index2 = refactoringTypes.indexOf(refactorings.get(counter).RefactoringType);
+			    	  refactoringTypeOccinProd.set(index2, refactoringTypeOccinProd.get(index2)+1);
+		    	  }
+			else if (commitTypeslabeled.get(index)==2) {
+				  
+				int index2 = refactoringTypes.indexOf(refactorings.get(counter).RefactoringType);
+		    	  refactoringTypeOccinBoth.set(index2, refactoringTypeOccinBoth.get(index2)+1);
+			  }
+			 	  
+			  
+		  }
+		  System.out.println("Done");
+	}
 }
