@@ -1,5 +1,8 @@
 package net.sqlitetutorial;
 import java.util.*;
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.*;
@@ -16,7 +19,9 @@ public class SQLiteJDBC {
 	 public static void main( String args[] ) {
 
 		 ArrayList<String> commitstemp = new ArrayList();
+		 ArrayList<String> namestemp = new ArrayList();
 		 Set<String> commits;
+		 Set<String> projects;
 		 ArrayList<Refactoring> refactorings = new ArrayList();
 		 
 		 ArrayList<String> refactoringTypes = new ArrayList();
@@ -28,7 +33,7 @@ public class SQLiteJDBC {
 		 ArrayList<String> commitTypes = new ArrayList();
 		 ArrayList<Integer> commitTypeslabeled = new ArrayList();
 		 
-		 
+		 ArrayList<Pattern> patterns = new ArrayList();
 		 
 		 
 		 
@@ -56,74 +61,20 @@ public class SQLiteJDBC {
 		         r.Class = rs.getString("Class");
 		         r.RefactoringDetail = rs.getString("RefactoringDetail");
 		         r.Message = rs.getString("Message");
-		         
+		         r.Name = rs.getString("Name");
+		         namestemp.add(rs.getString("Name"));
 		         refactorings.add(r);
 		      }
 		      
-		      rs = stmt.executeQuery( "SELECT * FROM commit_type;" );
-		      
-		      while ( rs.next() ) {
-			    	 
-		    	 commitTypes.add(rs.getString("CommitId"));
-		 		 commitTypeslabeled.add(rs.getInt("RefType"));
-		      }
-		      
-		      rs = stmt.executeQuery( "select distinct RefactoringType from miner_refactoring;" );
-		      
-		      while ( rs.next() ) {
-			    	 
-		    	  refactoringTypes.add(rs.getString("RefactoringType"));
-		    	  refactoringTypeOccinTest.add(0);
-		    	  refactoringTypeOccinProd.add(0);
-		    	  refactoringTypeOccinBoth.add(0);
-		    	  
-		    	  
-		      }
-		      
-		      
-		      rs.close();
-		      stmt.close();
-		      c.close();
+		      // extractRefactoringTypes(refactoringTypes, refactoringTypeOccinTest, refactoringTypeOccinProd, refactoringTypeOccinBoth, commitTypes, commitTypeslabeled, c, stmt);
 		      
 		      // Calculating coverages
 		      
-		      for (int counter = 0; counter < refactoringTypes.size(); counter++) {
-		    	  
-		    	  int match = 0;
-		    	  int all = 0;
-		    	  int refactMentions = 0;
-		    	  
-		          System.out.println("Calculating coverage of "+refactoringTypes.get(counter)); 
-		          
-		          for (int counter2 = 0; counter2 < refactorings.size(); counter2++) {
-		        	  
-		        	  if (refactorings.get(counter2).RefactoringDetail.contains(refactoringTypes.get(counter)))
-		        		  all++;
-		        	  if ( (refactorings.get(counter2).RefactoringDetail.contains(refactoringTypes.get(counter))) 
-		        			  && (refactorings.get(counter2).Message.contains(refactoringTypes.get(counter)))
-		        			  )
-		        	  {
-		        		  match++;
-		        	  }
-		        	  
-		        	  if ( (refactorings.get(counter2).RefactoringDetail.contains(refactoringTypes.get(counter))) 
-		        			  && (refactorings.get(counter2).Message.contains("refact"))
-		        			  )
-		        	  {
-		        		  refactMentions++;
-		        	  }
-		          }
-		          
-		          System.out.println("All "+all);
-		          System.out.println("Match "+match+" Ratio "+(float)match/all);
-		          System.out.println("Refactoring mentions "+refactMentions+" Ratio "+(float)refactMentions/all);
-		          // System.out.println(refactoringTypes.get(counter)+" = "+(float)match/all);
-		          // System.out.println(refactoringTypes.get(counter)+" = "+(float)refactMentions/all);
-		      }  
+		      // calculateCoverage(refactorings, refactoringTypes);  
 		      
 		      // removing duplicates
-		      commits= new HashSet<String>(commitstemp);
-		      
+		      commits = new HashSet<String>(commitstemp);
+		      projects = new HashSet<String>(namestemp);
 		      // Calculating test vs production commits
 		      /*
 		      System.out.print("Filtering commits... ");
@@ -141,7 +92,7 @@ public class SQLiteJDBC {
 		      List<String> commitIds = new ArrayList<String>(commits);
 		      
 		      // Creating an iterator 
-		      Iterator commitIterator = commitIds.iterator();
+		      //Iterator commitIterator = commitIds.iterator();
 		      // creating indicators
 		      ArrayList<Boolean> refactorTestFiles = new ArrayList();
 		      ArrayList<Boolean> refactorProdFiles = new ArrayList();
@@ -152,15 +103,49 @@ public class SQLiteJDBC {
 		    	  refactorProdFiles.add(false);
 		      }
 		      
+		  
+		      
+		      
+		      
 		      printStats(commits, refactorings, refactorTestFiles, refactorProdFiles);
 		      
-		      detectProductionVsTestCommits(refactorings, commitIds, refactorTestFiles, refactorProdFiles);
+		      // detectProductionVsTestCommits(refactorings, commitIds, refactorTestFiles, refactorProdFiles);
 		      
-			  celculateInstancesPerType(refactorings, refactoringTypes, refactoringTypeOccinTest,
-					refactoringTypeOccinProd, refactoringTypeOccinBoth, commitTypes, commitTypeslabeled);
+			  // celculateInstancesPerType(refactorings, refactoringTypes, refactoringTypeOccinTest, refactoringTypeOccinProd, refactoringTypeOccinBoth, commitTypes, commitTypeslabeled);
 		      
-		      printInstancesPerType(refactoringTypes, refactoringTypeOccinTest, refactoringTypeOccinProd,
-					refactoringTypeOccinBoth);	  
+		      // printInstancesPerType(refactoringTypes, refactoringTypeOccinTest, refactoringTypeOccinProd, refactoringTypeOccinBoth);	  
+		      
+		      readPatternsCSV(patterns);
+		      printPatterns(patterns);
+		      
+		      // preparing stuff for patterns
+		      
+		      Vector projectss = new Vector(projects);
+		      Vector patternOccurrence = new Vector();
+		      
+		      System.out.println("Number of projects: "+projects.size());
+		      
+		      for (int counter = 0; counter < projectss.size(); counter++) {
+		    	  patternOccurrence.add(counter,0);
+		      }
+		      
+		      for (int counter = 0; counter < patterns.size(); counter++) {
+		    	  
+		    	  for (int counter2 = 0; counter2 < refactorings.size(); counter2++) {
+		    		  
+		    		  if(refactorings.get(counter2).Message.contains(patterns.get(counter).pattern))
+		    		  {
+		    			  int indexProject = projectss.indexOf(refactorings.get(counter2).Name);
+		    			  
+		    			  patternOccurrence.set(indexProject, ((int)patternOccurrence.get(indexProject))+1);
+		    		  }
+		    	  }
+		    	  
+		    	  patterns.get(counter).occurrenceInProjects = new ArrayList(patternOccurrence);
+		      }
+		      
+		      // Test
+		      printPatternsOcc(patterns);
 		      
 		      
 		   } catch ( Exception e ) 
@@ -170,6 +155,73 @@ public class SQLiteJDBC {
 		   }
 		   System.out.println("Operation done successfully");
 		  }
+
+	private static void calculateCoverage(ArrayList<Refactoring> refactorings, ArrayList<String> refactoringTypes) {
+		for (int counter = 0; counter < refactoringTypes.size(); counter++) {
+			  
+			  int match = 0;
+			  int all = 0;
+			  int refactMentions = 0;
+			  
+		      System.out.println("Calculating coverage of "+refactoringTypes.get(counter)); 
+		      
+		      for (int counter2 = 0; counter2 < refactorings.size(); counter2++) {
+		    	  
+		    	  if (refactorings.get(counter2).RefactoringDetail.contains(refactoringTypes.get(counter)))
+		    		  all++;
+		    	  if ( (refactorings.get(counter2).RefactoringDetail.contains(refactoringTypes.get(counter))) 
+		    			  && (refactorings.get(counter2).Message.contains(refactoringTypes.get(counter)))
+		    			  )
+		    	  {
+		    		  match++;
+		    	  }
+		    	  
+		    	  if ( (refactorings.get(counter2).RefactoringDetail.contains(refactoringTypes.get(counter))) 
+		    			  && (refactorings.get(counter2).Message.contains("refact"))
+		    			  )
+		    	  {
+		    		  refactMentions++;
+		    	  }
+		      }
+		      
+		      System.out.println("All "+all);
+		      System.out.println("Match "+match+" Ratio "+(float)match/all);
+		      System.out.println("Refactoring mentions "+refactMentions+" Ratio "+(float)refactMentions/all);
+		      // System.out.println(refactoringTypes.get(counter)+" = "+(float)match/all);
+		      // System.out.println(refactoringTypes.get(counter)+" = "+(float)refactMentions/all);
+		  }
+	}
+
+	private static void extractRefactoringTypes(ArrayList<String> refactoringTypes,
+			ArrayList<Integer> refactoringTypeOccinTest, ArrayList<Integer> refactoringTypeOccinProd,
+			ArrayList<Integer> refactoringTypeOccinBoth, ArrayList<String> commitTypes,
+			ArrayList<Integer> commitTypeslabeled, Connection c, Statement stmt) throws SQLException {
+		ResultSet rs;
+		rs = stmt.executeQuery( "SELECT * FROM commit_type;" );
+		  
+		  while ( rs.next() ) {
+		    	 
+			 commitTypes.add(rs.getString("CommitId"));
+			 commitTypeslabeled.add(rs.getInt("RefType"));
+		  }
+		  
+		  rs = stmt.executeQuery( "select distinct RefactoringType from miner_refactoring;" );
+		  
+		  while ( rs.next() ) {
+		    	 
+			  refactoringTypes.add(rs.getString("RefactoringType"));
+			  refactoringTypeOccinTest.add(0);
+			  refactoringTypeOccinProd.add(0);
+			  refactoringTypeOccinBoth.add(0);
+			  
+			  
+		  }
+		  
+		  
+		  rs.close();
+		  stmt.close();
+		  c.close();
+	}
 
 	private static void printStats(Set<String> commits, ArrayList<Refactoring> refactorings,
 			ArrayList<Boolean> refactorTestFiles, ArrayList<Boolean> refactorProdFiles) {
@@ -264,6 +316,29 @@ public class SQLiteJDBC {
 		System.out.println("Done");
 	}
 
+	private static void printPatternsOcc(ArrayList<Pattern> patterns) throws IOException {
+		DateTimeFormatter timeStampPattern = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+		  System.out.print("Creating patterns output files... ");
+		  FileWriter csvWriter;
+		  
+		  for (int counter0 = 0; counter0 < patterns.size(); counter0++) {
+			  
+			  csvWriter = new FileWriter("output/patterns/"+patterns.get(counter0).pattern+"-"+timeStampPattern.format(java.time.LocalDateTime.now())+".csv");
+		  
+			  csvWriter.append(patterns.get(counter0).pattern);
+			  csvWriter.append("\n");
+
+			  for (int counter = 0; counter < patterns.get(counter0).occurrenceInProjects.size(); counter++) 
+			  {
+				  csvWriter.append(patterns.get(counter0).occurrenceInProjects.get(counter).toString());
+				  csvWriter.append("\n");
+			  }
+			  csvWriter.flush();
+			  csvWriter.close();
+		  }
+		  System.out.println("Done");
+	}
+	
 	private static void printInstancesPerType(ArrayList<String> refactoringTypes,
 			ArrayList<Integer> refactoringTypeOccinTest, ArrayList<Integer> refactoringTypeOccinProd,
 			ArrayList<Integer> refactoringTypeOccinBoth) throws IOException {
@@ -300,6 +375,7 @@ public class SQLiteJDBC {
 			ArrayList<String> refactoringTypes, ArrayList<Integer> refactoringTypeOccinTest,
 			ArrayList<Integer> refactoringTypeOccinProd, ArrayList<Integer> refactoringTypeOccinBoth,
 			ArrayList<String> commitTypes, ArrayList<Integer> commitTypeslabeled) {
+		
 		System.out.print("Calculating instances per type... ");  
 		  for (int counter = 0; counter < refactorings.size(); counter++) {
   
@@ -325,4 +401,51 @@ public class SQLiteJDBC {
 		  }
 		  System.out.println("Done");
 	}
+	
+	
+	public static void printPatterns(ArrayList<Pattern> patterns) {
+		System.out.println("List of Patterns:");
+		for (int counter = 0; counter < patterns.size(); counter++) {
+			System.out.println(patterns.get(counter).pattern);
+		}
+		
+	}
+	public static void readPatternsCSV(ArrayList<Pattern> patterns) {
+
+		System.out.print("Reading Patterns... ");
+        String csvFile = "C:/refdb/patterns.csv";
+        BufferedReader br = null;
+        String line = "";
+        String cvsSplitBy = "\n";
+
+        try {
+
+            br = new BufferedReader(new FileReader(csvFile));
+            while ((line = br.readLine()) != null) {
+
+                // use comma as separator
+            	Pattern temp = new Pattern(line);
+            	patterns.add(temp);
+
+                
+
+            }
+            System.out.println("Done");
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (br != null) {
+                try {
+                    br.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+    }
+	
 }

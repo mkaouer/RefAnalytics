@@ -8,6 +8,8 @@ public class Refactoring {
 	String Class;
 	String RefactoringDetail;
 	String Message;
+	String Name;
+	
 	
 	public Refactoring()
 	{
@@ -17,6 +19,7 @@ public class Refactoring {
 		 Class = new String();
 		 RefactoringDetail = new String();
 		 Message = new String();
+		 Name = new String();
 	}
 	
 	
