@@ -152,92 +152,9 @@ public class SQLiteJDBC {
 		    	  refactorProdFiles.add(false);
 		      }
 		      
-		      System.out.println("*** Some statistics ***");
-		      System.out.println("The number of commits: "+commits.size());
-		      System.out.println("The number of test booleans: "+refactorTestFiles.size());
-		      System.out.println("The number of prod booleans: "+refactorProdFiles.size());
-		      System.out.println("The number of refactorings: "+refactorings.size());
+		      printStats(commits, refactorings, refactorTestFiles, refactorProdFiles);
 		      
-//		        // detection of test vs. production commits
-//		        System.out.print("Detecting testing only commits... "); 
-//		        for (int counter = 0; counter < commitIds.size(); counter++) {
-//		            
-//		        	// testing with only 1000 instances
-//		        	//for (int counter2 = 0; counter2 < refactorings.size(); counter2++) {
-//		        	for (int counter2 = 0; counter2 < refactorings.size(); counter2++) {
-//		        		
-//				    	  if(commitIds.get(counter).equals(refactorings.get(counter2).CommitId)) {
-//				    		  
-//				    		  if(refactorings.get(counter2).FilePath.contains("test") || refactorings.get(counter2).FilePath.contains("Test")
-//				    		     || refactorings.get(counter2).Class.contains("test") || refactorings.get(counter2).Class.contains("Test")	  
-//				    				  ) {
-//				    		  
-//				    			  refactorTestFiles.set(counter, true);
-//				    		  }
-//				    		  else {
-//				    			  refactorProdFiles.set(counter, true);
-//				    		  }
-//				    	  }
-//				    	  
-//				      }
-//		        	
-//		        } 
-//		        System.out.println("Done");
-//		      
-//		        int testOnly = 0;
-//		        int prodOnly = 0;
-//		        int both = 0;
-//		        
-//		        DateTimeFormatter timeStampPattern = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
-//		        //System.out.println(timeStampPattern.format(java.time.LocalDateTime.now()));
-//		        
-//		        System.out.print("Creating output files... ");
-//		        FileWriter csvWriterTest = new FileWriter("output/testCommits"+timeStampPattern.format(java.time.LocalDateTime.now())+".csv");
-//		        FileWriter csvWriterProd = new FileWriter("output/prodCommits"+timeStampPattern.format(java.time.LocalDateTime.now())+".csv");
-//		        FileWriter csvWriterBoth = new FileWriter("output/bothCommits"+timeStampPattern.format(java.time.LocalDateTime.now())+".csv");
-//
-//		        
-//		        for (int counter = 0; counter < commitIds.size(); counter++) 
-//		        {
-//		        	
-//		        	if(refactorTestFiles.get(counter).equals(true))
-//		        	{
-//		        		if(refactorProdFiles.get(counter).equals(false)) 
-//		        		{
-//		        			testOnly++;
-//		        			csvWriterTest.append(commitIds.get(counter));
-//		        			csvWriterTest.append("\n");
-//		        		}
-//		        		else
-//		        		{
-//		        			both++;
-//		        			csvWriterBoth.append(commitIds.get(counter));
-//		        			csvWriterBoth.append("\n");
-//		        		}
-//		        	}
-//		        	else 
-//		        	{
-//		        		if(refactorProdFiles.get(counter).equals(true)) 
-//		        		{
-//		        			prodOnly++;
-//		        			csvWriterProd.append(commitIds.get(counter));
-//		        			csvWriterProd.append("\n");
-//		        		}
-//		        	}
-//		        }
-//		        
-//		        System.out.println("*** Some more statistics ***");
-//			    System.out.println("The number of commits refactoring tests: "+testOnly);
-//			    System.out.println("The number of commits refactoring prods: "+prodOnly);
-//			    System.out.println("The number of commits refactoring both: "+both);
-//		        
-//		        csvWriterTest.flush();
-//		        csvWriterTest.close();
-//		        csvWriterProd.flush();
-//		        csvWriterProd.close();
-//		        csvWriterBoth.flush();
-//		        csvWriterBoth.close();
-//		        System.out.println("Done");
+		      detectProductionVsTestCommits(refactorings, commitIds, refactorTestFiles, refactorProdFiles);
 		      
 			  celculateInstancesPerType(refactorings, refactoringTypes, refactoringTypeOccinTest,
 					refactoringTypeOccinProd, refactoringTypeOccinBoth, commitTypes, commitTypeslabeled);
@@ -253,6 +170,99 @@ public class SQLiteJDBC {
 		   }
 		   System.out.println("Operation done successfully");
 		  }
+
+	private static void printStats(Set<String> commits, ArrayList<Refactoring> refactorings,
+			ArrayList<Boolean> refactorTestFiles, ArrayList<Boolean> refactorProdFiles) {
+		System.out.println("*** Some statistics ***");
+		  System.out.println("The number of commits: "+commits.size());
+		  System.out.println("The number of test booleans: "+refactorTestFiles.size());
+		  System.out.println("The number of prod booleans: "+refactorProdFiles.size());
+		  System.out.println("The number of refactorings: "+refactorings.size());
+	}
+
+	private static void detectProductionVsTestCommits(ArrayList<Refactoring> refactorings, List<String> commitIds,
+			ArrayList<Boolean> refactorTestFiles, ArrayList<Boolean> refactorProdFiles) throws IOException {
+		// detection of test vs. production commits
+		System.out.print("Detecting testing only commits... "); 
+		for (int counter = 0; counter < commitIds.size(); counter++) {
+		    
+			// testing with only 1000 instances
+			//for (int counter2 = 0; counter2 < refactorings.size(); counter2++) {
+			for (int counter2 = 0; counter2 < refactorings.size(); counter2++) {
+				
+		    	  if(commitIds.get(counter).equals(refactorings.get(counter2).CommitId)) {
+		    		  
+		    		  if(refactorings.get(counter2).FilePath.contains("test") || refactorings.get(counter2).FilePath.contains("Test")
+		    		     || refactorings.get(counter2).Class.contains("test") || refactorings.get(counter2).Class.contains("Test")	  
+		    				  ) {
+		    		  
+		    			  refactorTestFiles.set(counter, true);
+		    		  }
+		    		  else {
+		    			  refactorProdFiles.set(counter, true);
+		    		  }
+		    	  }
+		    	  
+		      }
+			
+		} 
+		System.out.println("Done");
+     
+		int testOnly = 0;
+		int prodOnly = 0;
+		int both = 0;
+		
+		DateTimeFormatter timeStampPattern = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+		//System.out.println(timeStampPattern.format(java.time.LocalDateTime.now()));
+		
+		System.out.print("Creating output files... ");
+		FileWriter csvWriterTest = new FileWriter("output/testCommits"+timeStampPattern.format(java.time.LocalDateTime.now())+".csv");
+		FileWriter csvWriterProd = new FileWriter("output/prodCommits"+timeStampPattern.format(java.time.LocalDateTime.now())+".csv");
+		FileWriter csvWriterBoth = new FileWriter("output/bothCommits"+timeStampPattern.format(java.time.LocalDateTime.now())+".csv");
+
+		
+		for (int counter = 0; counter < commitIds.size(); counter++) 
+		{
+			
+			if(refactorTestFiles.get(counter).equals(true))
+			{
+				if(refactorProdFiles.get(counter).equals(false)) 
+				{
+					testOnly++;
+					csvWriterTest.append(commitIds.get(counter));
+					csvWriterTest.append("\n");
+				}
+				else
+				{
+					both++;
+					csvWriterBoth.append(commitIds.get(counter));
+					csvWriterBoth.append("\n");
+				}
+			}
+			else 
+			{
+				if(refactorProdFiles.get(counter).equals(true)) 
+				{
+					prodOnly++;
+					csvWriterProd.append(commitIds.get(counter));
+					csvWriterProd.append("\n");
+				}
+			}
+		}
+		
+		System.out.println("*** Some more statistics ***");
+		System.out.println("The number of commits refactoring tests: "+testOnly);
+		System.out.println("The number of commits refactoring prods: "+prodOnly);
+		System.out.println("The number of commits refactoring both: "+both);
+		
+		csvWriterTest.flush();
+		csvWriterTest.close();
+		csvWriterProd.flush();
+		csvWriterProd.close();
+		csvWriterBoth.flush();
+		csvWriterBoth.close();
+		System.out.println("Done");
+	}
 
 	private static void printInstancesPerType(ArrayList<String> refactoringTypes,
 			ArrayList<Integer> refactoringTypeOccinTest, ArrayList<Integer> refactoringTypeOccinProd,
