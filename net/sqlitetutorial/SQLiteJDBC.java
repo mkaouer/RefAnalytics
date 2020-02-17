@@ -198,7 +198,7 @@ public class SQLiteJDBC {
 		      }
 		      
 		      // Test
-		      printPatternsOcc(patterns);
+		      printPatternsOcc(patterns,projectss);
 		      
 		      rs.close();
 			  stmt.close();
@@ -375,7 +375,7 @@ public class SQLiteJDBC {
 		System.out.println("Done");
 	}
 
-	private static void printPatternsOcc(ArrayList<Pattern> patterns) throws IOException {
+	private static void printPatternsOcc(ArrayList<Pattern> patterns,Vector projectss) throws IOException {
 		DateTimeFormatter timeStampPattern = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 		  System.out.print("Creating patterns output files... ");
 		  FileWriter csvWriter;
@@ -395,6 +395,9 @@ public class SQLiteJDBC {
 
 			  for (int counter = 0; counter < patterns.get(counter0).occurrenceInRefProjects.size(); counter++) 
 			  {
+				  
+				  csvWriter.append(projectss.get(counter).toString());
+				  csvWriter.append(",");
 				  csvWriter.append(patterns.get(counter0).occurrenceInRefProjects.get(counter).toString());
 				  csvWriter.append(",");
 				  csvWriter.append(patterns.get(counter0).occurrenceInNonProjects.get(counter).toString());
