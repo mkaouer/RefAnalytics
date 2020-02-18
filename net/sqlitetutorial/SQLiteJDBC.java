@@ -164,6 +164,9 @@ public class SQLiteJDBC {
 		      Vector patternOccurrence = new Vector();
 		      Vector patternOccurrenceNonRef = new Vector();
 		      
+		      Vector commitsCountedRef = new Vector();
+		      Vector commitsCountedNonRef = new Vector();
+		      
 		      System.out.println("Number of refactoring projects: "+projects.size());
 		      
 		      for (int counter = 0; counter < projectss.size(); counter++) {
@@ -180,6 +183,8 @@ public class SQLiteJDBC {
 		    			  int indexProject = projectss.indexOf(CR.get(counter2).Name);
 		    			  
 		    			  patternOccurrence.set(indexProject, ((int)patternOccurrence.get(indexProject))+1);
+		    			  
+		    			  patterns.get(counter).occurrenceInRefCommits.add(CR.get(counter2).CommitSHA);
 		    		  }
 		    	  }
 		    	  
@@ -190,6 +195,8 @@ public class SQLiteJDBC {
 		    			  int indexProject = projectss.indexOf(commitsNonRef.get(counter2).Name);
 		    			  
 		    			  patternOccurrenceNonRef.set(indexProject, ((int)patternOccurrenceNonRef.get(indexProject))+1);
+		    			  
+		    			  patterns.get(counter).occurrenceInNonCommits.add(commitsNonRef.get(counter2).CommitSHA);
 		    		  }
 		    	  }
 		    	  
@@ -197,8 +204,22 @@ public class SQLiteJDBC {
 		    	  patterns.get(counter).occurrenceInNonProjects = new ArrayList(patternOccurrenceNonRef);
 		      }
 		      
+		      for (int counter = 0; counter < patterns.size(); counter++) {
+		    	  
+		    	  int occCount = 0;
+		    	  
+		    	  for (int counter2 = 0; counter2 < patterns.get(counter).occurrenceInRefCommits.size(); counter2++) {
+		    		  
+		    		  occCount = CR.
+		    	  }
+		    	  
+		    	  patterns.get(counter).occurrenceInRefProjects2.add(occCount);
+		      }
+		    	  
+		    	  
+		      
 		      // Test
-		      printPatternsOcc(patterns,projectss);
+		      printPatternsOcc(patterns,projectss,commitsCountedRef,commitsCountedNonRef);
 		      
 		      rs.close();
 			  stmt.close();
@@ -375,21 +396,22 @@ public class SQLiteJDBC {
 		System.out.println("Done");
 	}
 
-	private static void printPatternsOcc(ArrayList<Pattern> patterns,Vector projectss) throws IOException {
+	private static void printPatternsOcc(ArrayList<Pattern> patterns,Vector projectss, Vector commitsCountedRef, Vector commitsCountedNonRef) throws IOException {
 		DateTimeFormatter timeStampPattern = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 		  System.out.print("Creating patterns output files... ");
-		  FileWriter csvWriter;
+		  FileWriter csvWriter,csvWriterRefCommits,csvWriterNonCommits;
+		  
+		  String time = new String(timeStampPattern.format(java.time.LocalDateTime.now()));
+		  File file = new File("output/patterns/"+time+"/");
+	      //Creating the directory
+	      boolean bool = file.mkdir();
 		  
 		  for (int counter0 = 0; counter0 < patterns.size(); counter0++) {
 			  
-			  
-			  String time = new String(timeStampPattern.format(java.time.LocalDateTime.now()));
-			  File file = new File("output/patterns/"+time+"/");
-		      //Creating the directory
-		      boolean bool = file.mkdir();
-			  
 			  csvWriter = new FileWriter("output/patterns/"+time+"/"+patterns.get(counter0).pattern+"-"+time+".csv");
-		  
+			  csvWriterRefCommits = new FileWriter("output/patterns/"+time+"/"+patterns.get(counter0).pattern+"- RefCommits - "+time+".csv");
+			  csvWriterNonCommits = new FileWriter("output/patterns/"+time+"/"+patterns.get(counter0).pattern+"- NonCommits - "+time+".csv");
+			  
 			  csvWriter.append(patterns.get(counter0).pattern);
 			  csvWriter.append("\n");
 
@@ -403,6 +425,33 @@ public class SQLiteJDBC {
 				  csvWriter.append(patterns.get(counter0).occurrenceInNonProjects.get(counter).toString());
 				  csvWriter.append("\n");
 			  }
+			  
+			  // extra verification
+			  
+			  csvWriterRefCommits.append(patterns.get(counter0).pattern);
+			  csvWriterNonCommits.append(patterns.get(counter0).pattern);
+			  csvWriterRefCommits.append("\n");
+			  csvWriterNonCommits.append("\n");
+
+			  for (int counter = 0; counter < patterns.get(counter0).occurrenceInRefCommits.size(); counter++) 
+			  {
+				  
+				  csvWriterRefCommits.append(patterns.get(counter0).occurrenceInRefCommits.get(counter).toString());
+				  csvWriterRefCommits.append("\n");
+			  }
+			  
+			  for (int counter = 0; counter < patterns.get(counter0).occurrenceInNonCommits.size(); counter++) 
+			  {
+				  
+				  csvWriterNonCommits.append(patterns.get(counter0).occurrenceInNonCommits.get(counter).toString());
+				  csvWriterNonCommits.append("\n");
+			  }
+			  
+			  
+			  csvWriterRefCommits.flush();
+			  csvWriterRefCommits.close();
+			  csvWriterNonCommits.flush();
+			  csvWriterNonCommits.close();
 			  csvWriter.flush();
 			  csvWriter.close();
 		  }

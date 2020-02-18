@@ -13,6 +13,16 @@ public class CommitRef {
 		CommitSHA = new String();
 		Message = new String();
 	}
+	
+	public int countCommits(String SHA)
+	{
+		int count = 0 ;
+		
+		
+		
+		return 0;
+		
+	}
 	 
 	
 }
