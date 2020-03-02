@@ -62,7 +62,7 @@ public class SQLiteJDBC {
 		      while ( rs.next() ) {
 		    	 
 		    	  Refactoring r = new Refactoring();
-		    	  CommitRef temp = new CommitRef();
+		    	  CommitRef temprefcommit = new CommitRef();
 		    	  
 		    	 commitstemp.add(rs.getString("CommitId"));
 		    	 r.CommitId = rs.getString("CommitId");
@@ -75,14 +75,15 @@ public class SQLiteJDBC {
 		         namestemp.add(rs.getString("Name"));
 		         refactorings.add(r);
 		         
-		         if (!commitsofref.contains(r.CommitId)) {
-		        	 commitsofref.add(r.CommitId);
-		        	 temp.CommitSHA = new String(r.CommitId);
-		        	 temp.Message = new String(r.Message);
-		        	 temp.Name = new String(r.Name);
-		        	 CR.add(temp);
-		    	  }
+		         //if (!commitsofref.contains(r.CommitId)) {
+		        //	 commitsofref.add(r.CommitId);
+		        //	 temprefcommit.CommitSHA = new String(r.CommitId);
+		        //	 temprefcommit.Message = new String(r.Message);
+		        //	 temprefcommit.Name = new String(r.Name);
+		        //	 CR.add(temprefcommit);
+		    	//  }
 		      }
+		      
 		      
 		      ArrayList<String> nonrefproj = new ArrayList(); 
 		      
@@ -95,9 +96,9 @@ public class SQLiteJDBC {
 		    	  temp.Name = new String(rs2.getString("Name"));
 		    	  temp.Message = new String(rs2.getString("Message"));
 		    	  
-		    	  if (!nonrefproj.contains(temp.Name)) {
+		    	  //if (!nonrefproj.contains(temp.Name)) {
 		    		  nonrefproj.add(temp.Name);
-		    	  }
+		    	  //}
 		    	  
 		    	  commitsNonRef.add(temp);
 		    	  
@@ -105,10 +106,12 @@ public class SQLiteJDBC {
 		      
 		      System.out.println("Number of non ref projects: "+nonrefproj.size());
 		      
+		      HashSet nonrefprojectshash = new HashSet<String>(nonrefproj);
+		      
+		      nonrefproj = new ArrayList(nonrefprojectshash);
+		      
 		      // extractRefactoringTypes(refactoringTypes, refactoringTypeOccinTest, refactoringTypeOccinProd, refactoringTypeOccinBoth, commitTypes, commitTypeslabeled, c, stmt);
-		      
 		      // Calculating coverages
-		      
 		      // calculateCoverage(refactorings, refactoringTypes);  
 		      
 		      // removing duplicates
@@ -174,49 +177,80 @@ public class SQLiteJDBC {
 		    	  patternOccurrenceNonRef.add(counter,0);
 		      }
 		      
+		      Map<String, Integer> aMap = new HashMap<String, Integer>();
+		      
+		      System.out.println("aMap done!");
+		      for (int counter = 0; counter < projectss.size(); counter++) {
+		    	  
+		    	  aMap.put(projectss.get(counter).toString(),0);
+		      }
+		      
+		      
+		      
 		      for (int counter = 0; counter < patterns.size(); counter++) {
 		    	  
-		    	  for (int counter2 = 0; counter2 < CR.size(); counter2++) {
+		    	  System.out.println("For refactoring:");
+		    	  for (int counter2 = 0; counter2 < refactorings.size(); counter2++) {
 		    		  
-		    		  if(CR.get(counter2).Message.contains(patterns.get(counter).pattern))
+		    		  
+		    		  if(refactorings.get(counter2).Message.toLowerCase().contains(patterns.get(counter).pattern))
 		    		  {
-		    			  int indexProject = projectss.indexOf(CR.get(counter2).Name);
+		    			  System.out.println("Adding to aMap "+aMap.get(refactorings.get(counter2).Name.toLowerCase()));
+		    			  aMap.replace(refactorings.get(counter2).Name.toLowerCase(),aMap.get(refactorings.get(counter2).Name.toLowerCase())+1); 
+		    			  
+		    			  int indexProject = projectss.indexOf(refactorings.get(counter2).Name);
 		    			  
 		    			  patternOccurrence.set(indexProject, ((int)patternOccurrence.get(indexProject))+1);
 		    			  
-		    			  patterns.get(counter).occurrenceInRefCommits.add(CR.get(counter2).CommitSHA);
+		    			  patterns.get(counter).occurrenceInRefCommits.add(refactorings.get(counter2).Name);
+		    			  
+		    			  System.out.println(projectss.indexOf(refactorings.get(counter2).Name+" contains "+patternOccurrence.get(indexProject))+" and we are adding this commit "+CR.get(counter2).CommitSHA);
 		    		  }
 		    	  }
-		    	  
+		    	  	System.out.println("For non refactoring:");
+		    	  	
 		    	  	for (int counter2 = 0; counter2 < commitsNonRef.size(); counter2++) {
 		    		  
-		    		  if(commitsNonRef.get(counter2).Message.contains(patterns.get(counter).pattern))
+		    		  if(commitsNonRef.get(counter2).Message.toLowerCase().contains(patterns.get(counter).pattern))
 		    		  {
+		    			  
 		    			  int indexProject = projectss.indexOf(commitsNonRef.get(counter2).Name);
 		    			  
 		    			  patternOccurrenceNonRef.set(indexProject, ((int)patternOccurrenceNonRef.get(indexProject))+1);
 		    			  
-		    			  patterns.get(counter).occurrenceInNonCommits.add(commitsNonRef.get(counter2).CommitSHA);
+		    			  patterns.get(counter).occurrenceInNonCommits.add(commitsNonRef.get(counter2).Name);
+		    			  
+		    			 // System.out.println(projectss.indexOf(commitsNonRef.get(counter2).Name+" contains "+patternOccurrenceNonRef.get(indexProject))+" and we are adding this commit "+commitsNonRef.get(counter2).CommitSHA);
+			    		  
 		    		  }
 		    	  }
+		    	  	
+		    	  for (String name: aMap.keySet()){
+		                String key = name.toString();
+		                String value = aMap.get(name).toString();  
+		                System.out.println(key + " " + value);  
+		    	  }	
 		    	  
 		    	  patterns.get(counter).occurrenceInRefProjects = new ArrayList(patternOccurrence);
 		    	  patterns.get(counter).occurrenceInNonProjects = new ArrayList(patternOccurrenceNonRef);
 		      }
 		      
-		      for (int counter = 0; counter < patterns.size(); counter++) {
+		      for (int counter = 0; counter < patterns.size(); counter++) 
+		      {
+		    	  int occref = 0;
+		    	  int occnon = 0;
 		    	  
-		    	  int occCount = 0;
-		    	  
-		    	  for (int counter2 = 0; counter2 < patterns.get(counter).occurrenceInRefCommits.size(); counter2++) {
-		    		  
-		    		  occCount = CR.
+		    	  for (int counter2 = 0; counter2 < projects.size(); counter2++) 
+		    	  {
+		    		  occref = (int) Collections.frequency(patterns.get(counter).occurrenceInRefCommits, projectss.get(counter2));
+		    		  occnon = (int) Collections.frequency(patterns.get(counter).occurrenceInNonCommits, projectss.get(counter2));
 		    	  }
-		    	  
-		    	  patterns.get(counter).occurrenceInRefProjects2.add(occCount);
+		    	  patterns.get(counter).occurrenceInRefProjects2.add(occref);
+		    	  patterns.get(counter).occurrenceInNonProjects2.add(occnon);
+		    	  // System.out.println("For pattern "+patterns.get(counter).pattern+" ther number of ref projects "+patterns.get(counter).occurrenceInRefProjects2.get(patterns.get(counter).occurrenceInRefProjects2.size()-1)+"number of non projects "+patterns.get(counter).occurrenceInNonProjects2.get(patterns.get(counter).occurrenceInNonProjects2.size()-1));
 		      }
-		    	  
-		    	  
+		      
+		      	  
 		      
 		      // Test
 		      printPatternsOcc(patterns,projectss,commitsCountedRef,commitsCountedNonRef);
@@ -399,7 +433,7 @@ public class SQLiteJDBC {
 	private static void printPatternsOcc(ArrayList<Pattern> patterns,Vector projectss, Vector commitsCountedRef, Vector commitsCountedNonRef) throws IOException {
 		DateTimeFormatter timeStampPattern = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 		  System.out.print("Creating patterns output files... ");
-		  FileWriter csvWriter,csvWriterRefCommits,csvWriterNonCommits;
+		  FileWriter csvWriter,csvWriter2,csvWriterRefCommits,csvWriterNonCommits;
 		  
 		  String time = new String(timeStampPattern.format(java.time.LocalDateTime.now()));
 		  File file = new File("output/patterns/"+time+"/");
@@ -409,6 +443,7 @@ public class SQLiteJDBC {
 		  for (int counter0 = 0; counter0 < patterns.size(); counter0++) {
 			  
 			  csvWriter = new FileWriter("output/patterns/"+time+"/"+patterns.get(counter0).pattern+"-"+time+".csv");
+			  csvWriter2 = new FileWriter("output/patterns/"+time+"/0 "+patterns.get(counter0).pattern+"-"+time+".csv");
 			  csvWriterRefCommits = new FileWriter("output/patterns/"+time+"/"+patterns.get(counter0).pattern+"- RefCommits - "+time+".csv");
 			  csvWriterNonCommits = new FileWriter("output/patterns/"+time+"/"+patterns.get(counter0).pattern+"- NonCommits - "+time+".csv");
 			  
@@ -424,6 +459,22 @@ public class SQLiteJDBC {
 				  csvWriter.append(",");
 				  csvWriter.append(patterns.get(counter0).occurrenceInNonProjects.get(counter).toString());
 				  csvWriter.append("\n");
+			  }
+			  
+			  // updated count
+			  
+			  csvWriter2.append(patterns.get(counter0).pattern);
+			  csvWriter2.append("\n");
+
+			  for (int counter = 0; counter < patterns.get(counter0).occurrenceInRefProjects2.size(); counter++) 
+			  {
+				  
+				  csvWriter2.append(projectss.get(counter).toString());
+				  csvWriter2.append(",");
+				  csvWriter2.append(patterns.get(counter0).occurrenceInRefProjects2.get(counter).toString());
+				  csvWriter2.append(",");
+				  csvWriter2.append(patterns.get(counter0).occurrenceInNonProjects2.get(counter).toString());
+				  csvWriter2.append("\n");
 			  }
 			  
 			  // extra verification
@@ -454,6 +505,8 @@ public class SQLiteJDBC {
 			  csvWriterNonCommits.close();
 			  csvWriter.flush();
 			  csvWriter.close();
+			  csvWriter2.flush();
+			  csvWriter2.close();
 		  }
 		  System.out.println("Done");
 	}
@@ -543,7 +596,7 @@ public class SQLiteJDBC {
             while ((line = br.readLine()) != null) {
 
                 // use comma as separator
-            	Pattern temp = new Pattern(line);
+            	Pattern temp = new Pattern( " " +line);
             	patterns.add(temp);
 
                 
